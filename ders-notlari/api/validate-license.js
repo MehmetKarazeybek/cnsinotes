@@ -14,7 +14,12 @@ module.exports = async (req, res) => {
     const clientIP = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || '0.0.0.0';
 
     const match = /^ZEYX-(\d{6})-OK$/.exec(license);
-    if (!match || (parseInt(match[1], 10) % 97) !== 43) {
+    if (!match) {
+      return res.status(403).json({ error: 'Gecersiz format' });
+    }
+
+    const num = parseInt(match[1], 10);
+    if ((num % 97) !== 43) {
       return res.status(403).json({ error: 'Gecersiz anahtar' });
     }
 
@@ -24,6 +29,7 @@ module.exports = async (req, res) => {
     const token = `${Buffer.from(clientIP).toString('base64')}.${timestamp}.${signature}`;
 
     return res.status(200).json({ success: true, token, ip: clientIP });
+
   } catch (err) {
     return res.status(500).json({ error: 'Sunucu hatasi' });
   }
